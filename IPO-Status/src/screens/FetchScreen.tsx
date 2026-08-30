@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Text, Button, Menu, ActivityIndicator, FAB } from 'react-native-paper';
 import { useAppContext } from '../context/AppContext';
@@ -10,43 +10,55 @@ const IpoDropdown = ({
   selectedIpo,
   allIpos,
   selectedIpos,
-  onSelect
+  onSelect,
+  onRemove
 }: {
   index: number;
   selectedIpo: IpoItem | null;
   allIpos: IpoItem[];
   selectedIpos: (IpoItem | null)[];
   onSelect: (ipo: IpoItem) => void;
+  onRemove?: () => void;
 }) => {
   const [menuVisible, setMenuVisible] = useState(false);
 
-  const availableIpos = allIpos.filter(
-    ipo => !selectedIpos.some((selected, i) => i !== index && selected?.symbol === ipo.symbol)
+  const availableIpos = useMemo(
+    () => allIpos
+      .filter(ipo => !selectedIpos.some((selected, i) => i !== index && selected?.symbol === ipo.symbol))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [allIpos, selectedIpos, index]
   );
 
   return (
     <View style={styles.dropdownContainer}>
       <Text style={styles.label}>Select IPO {index + 1}:</Text>
-      <Menu
-        visible={menuVisible}
-        onDismiss={() => setMenuVisible(false)}
-        anchor={
-          <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.dropdownAnchor}>
-            <Text>{selectedIpo ? selectedIpo.name : 'Select an IPO'}</Text>
+      <View style={styles.dropdownRow}>
+        <Menu
+          visible={menuVisible}
+          onDismiss={() => setMenuVisible(false)}
+          anchor={
+            <TouchableOpacity onPress={() => setMenuVisible(true)} style={[styles.dropdownAnchor, styles.dropdownAnchorFlex]}>
+              <Text>{selectedIpo ? selectedIpo.name : 'Select an IPO'}</Text>
+            </TouchableOpacity>
+          }
+        >
+          {availableIpos.map((ipo, idx) => (
+            <Menu.Item
+              key={`${ipo.symbol}-${idx}`}
+              onPress={() => {
+                onSelect(ipo);
+                setMenuVisible(false);
+              }}
+              title={ipo.name}
+            />
+          ))}
+        </Menu>
+        {onRemove && (
+          <TouchableOpacity onPress={onRemove} style={styles.removeBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Text style={styles.removeBtnText}>−</Text>
           </TouchableOpacity>
-        }
-      >
-        {availableIpos.map((ipo, idx) => (
-          <Menu.Item 
-            key={`${ipo.symbol}-${idx}`} 
-            onPress={() => {
-              onSelect(ipo);
-              setMenuVisible(false);
-            }} 
-            title={ipo.name} 
-          />
-        ))}
-      </Menu>
+        )}
+      </View>
     </View>
   );
 };
@@ -83,6 +95,10 @@ export const FetchScreen = () => {
     }
   };
 
+  const removeDropdown = (index: number) => {
+    setSelectedIpos(selectedIpos.filter((_, i) => i !== index));
+  };
+
   const isSelected = selectedIpos.some(ipo => ipo !== null);
 
   return (
@@ -96,6 +112,7 @@ export const FetchScreen = () => {
             allIpos={ipos}
             selectedIpos={selectedIpos}
             onSelect={(ipo) => updateSelection(index, ipo)}
+            onRemove={index > 0 ? () => removeDropdown(index) : undefined}
           />
         ))}
         
@@ -149,11 +166,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
   },
+  dropdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   dropdownAnchor: {
     borderWidth: 1,
     borderColor: '#ccc',
     padding: 15,
     borderRadius: 8,
+  },
+  dropdownAnchorFlex: {
+    flex: 1,
+  },
+  removeBtn: {
+    marginLeft: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeBtnText: {
+    fontSize: 20,
+    lineHeight: 22,
+    color: '#d32f2f',
   },
   fabContainer: {
     alignItems: 'flex-start',
