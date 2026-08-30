@@ -37,8 +37,13 @@ build-android:
 
 # Build standalone Android APK
 apk-android:
-	cd $(APP_DIR) && unset NPM_CONFIG_REGISTRY && export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools && export PATH=$$PATH:$$ANDROID_HOME/cmdline-tools/latest/bin && npx expo prebuild -p android --clean && cd android && ./gradlew assembleRelease
-	cp $(APP_DIR)/android/app/build/outputs/apk/release/app-release.apk ipo-allocation-status.apk
+	cd $(APP_DIR) && unset NPM_CONFIG_REGISTRY && export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools && export PATH=$$PATH:$$ANDROID_HOME/cmdline-tools/latest/bin && npx expo prebuild -p android --clean && cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
+	cp $(APP_DIR)/android/app/build/outputs/apk/release/app-release.apk ipo-allocation-status-arm64.apk
+
+# Build Android App Bundle (for Play Store)
+bundle-android:
+	cd $(APP_DIR) && unset NPM_CONFIG_REGISTRY && export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools && export PATH=$$PATH:$$ANDROID_HOME/cmdline-tools/latest/bin && npx expo prebuild -p android --clean && cd android && ./gradlew bundleRelease
+	cp $(APP_DIR)/android/app/build/outputs/bundle/release/app-release.aab ipo-allocation-status.aab
 
 # Build native iOS app
 build-ios:

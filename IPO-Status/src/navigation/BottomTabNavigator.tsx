@@ -1,6 +1,6 @@
 import React from 'react';
+import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { FetchScreen } from '../screens/FetchScreen';
 import { StatusScreen } from '../screens/StatusScreen';
@@ -8,25 +8,22 @@ import { AccountsScreen } from '../screens/AccountsScreen';
 
 const Tab = createBottomTabNavigator();
 
+const TAB_GLYPHS: Record<string, string> = {
+  Fetch: '⇩',
+  Status: '☰',
+  Accounts: '👤',
+};
+
 export const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName = '';
-
-          if (route.name === 'Fetch') {
-            iconName = 'cloud-search';
-          } else if (route.name === 'Status') {
-            iconName = 'format-list-checks';
-          } else if (route.name === 'Accounts') {
-            iconName = 'account-group';
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
+        tabBarIcon: ({ color, size }) => (
+          <Text style={{ fontSize: size, color }}>{TAB_GLYPHS[route.name] ?? ''}</Text>
+        ),
         tabBarActiveTintColor: '#2196F3',
         tabBarInactiveTintColor: 'gray',
+        tabBarStyle: { paddingBottom: 8, height: 60 },
       })}
     >
       <Tab.Screen name="Fetch" component={FetchScreen} />

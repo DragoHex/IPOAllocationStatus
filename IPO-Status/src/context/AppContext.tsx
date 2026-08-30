@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { Account, getAccounts, initDB } from '../db';
-import { fetchAllIpos, fetchStatusForPan, IpoItem, StatusResult } from '../api';
+import { fetchStatusForPan, IpoItem, StatusResult } from '../api';
+import { refreshIpoCache, startIpoCacheAutoRefresh } from '../api/ipoCache';
 
 interface AppContextProps {
   accounts: Account[];
@@ -35,10 +36,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       } catch (error) {
         console.error("Initialization Error:", error);
         // Even if fetching IPOs fails, we want the app to open
-        setDbInitialized(true); 
+        setDbInitialized(true);
       }
     };
     setup();
+
+    const stopAutoRefresh = startIpoCacheAutoRefresh(setIpos);
+    return stopAutoRefresh;
   }, []);
 
   const refreshAccounts = async () => {
@@ -47,8 +51,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const refreshIpos = async () => {
-    const data = await fetchAllIpos();
-    setIpos(data);
+    setIpos(await refreshIpoCache());
   };
 
   const performFetch = async () => {
